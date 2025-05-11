@@ -588,13 +588,70 @@ head(productos)
 
 ## Julen y Emma
 - ¿Cuál es el ticket de mayor importe registrado? ¿Qué productos incluye?
-(Esta es sencilla buscais en el df de info_ticket cual tiene mayor importe y luego mostrais todos los productos asociados a la factura simplificada de ese ticket, en este caso para graficarlo podeis simplemente meter todos los tickets en una grafica y señalar con un simbolo en el plot el ticket que tenga el valor mas alto )
+```{r}
+#Buscar el ticket de mayor importe:
+ticket_max <- info_tickets %>%
+  filter(Importe_Final == max(Importe_Final))
+ticket_max
+
+#Obtener los productos asociados al ticket de mayor importe:
+productos_max <- productos %>%
+  filter(Factura_simplificada == ticket_max$Factura_simplificada)
+productos_max
+
+#Graficar todos los tickets con el ticket máximo destacado
+ggplot(info_tickets, aes(x = Factura_simplificada, y = Importe_Final)) +
+  geom_point(alpha = 0.5) +
+  geom_point(data = ticket_max, aes(x = Factura_simplificada, y = Importe_Final),
+             color = "red", size = 3) +
+  labs(title = "Importe de todos los tickets con el ticket máximo destacado",
+       x = "Factura simplificada",
+       y = "Importe (€)") +
+  theme_minimal()
+```
 
 - ¿Cuál es el importe medio de los tickets por municipio? ¿Se observan diferencias significativas entre zonas?
-(agrupais los datos por ciudad y mostrais en graficas diferentes (por ciudad) la media del importe de esos tickets, y luego respondeis a la pregunta)
+```{r}
+#Calcular el importe medio por municipio
+importe_municipio <- info_tickets %>%
+  group_by(Municipio) %>%
+  summarise(Importe_Medio = mean(Importe_Final, na.rm = TRUE)) %>%
+  arrange(desc(Importe_Medio))
+
+#Gráfico de barras ordenado
+ggplot(importe_municipio, aes(x = reorder(Municipio, Importe_Medio), y = Importe_Medio)) +
+  geom_col(fill = "steelblue") +
+  coord_flip() +
+  labs(title = "Importe medio de tickets por municipio",
+       x = "Municipio",
+       y = "Importe medio (€)") +
+  theme_minimal()
+
+
+```
 
 - ¿Cuál es la procedencia de los tickets? ¿Qué ciudad/pueblo tiene un mayor número de tickets?
-(Decis cuales son los pueblos que tenemos en la tabla y luego agrupais los datos por ciudad y sumais el numero de tickets, luego lo podeis mostrar en un grafico de barras)
+```{r}
+# Agrupamos por municipio y contamos los tickets
+tickets_por_municipio <- info_tickets %>%
+  group_by(Municipio) %>%
+  summarise(Total_Tickets = n()) %>%
+  arrange(desc(Total_Tickets))
+
+tickets_por_municipio
+
+# Graficamos
+ggplot(tickets_por_municipio, aes(x = reorder(Municipio, Total_Tickets), y = Total_Tickets)) +
+  geom_col(fill = "steelblue") +
+  coord_flip() +
+  labs(title = "Número de tickets por municipio",
+       x = "Municipio",
+       y = "Total de tickets") +
+  theme_minimal(base_size = 10)
+
+
+```
+
 
 - ¿Qué porcentaje de las compras incluye productos con peso (por kilo) frente a productos por unidad?
 (juntais los df de productos y infoticket y luego haceis un promedio de los prodcutos por peso y los productos por unidad y los poneis en un grafico de barras o en graficas separadas para cada tipo)
@@ -859,8 +916,76 @@ El análisis muestra que hay un grupo selecto de productos que lideran el rankin
 - Si consideramos la categoría de FRUTAS Y VERDURAS. ¿Cuáles son los 5 productos más vendidos? ¿Cuántos kilos se han vendido de cada uno de estos productos?
 (ya seguro teneis de antes las frutas y verduras asi que agruparíamos por producto, sumaríamos los kilos (sum(Peso_kg)), y ordenaríamos para obtener los 5 más vendidos por peso, lo que revelaría los preferidos en esta categoría.)
 
+```{r}
+#Mediante el df usado anteriormenet de frutas_verduras, sepramos por productos y nos quedamos con los 5 productos más vendidos
+m_5_frutas_verduras <- frutas_verduras %>%
+  group_by(Producto) %>%
+  summarise(Total_Kg = sum(Peso_kg, na.rm = TRUE)) %>%
+  arrange(desc(Total_Kg)) %>%
+  slice_head(n=5)
+
+tibble(m_5_frutas_verduras)
+
+
+```
+El ranking obtenido muestra que la fruta/verdura mas vendida es el platano que se han vendido 56.306 Kg, con mas del doble de kg vendidos sobre el segundo que es la banana con 25.978 Kg.
+
+
+
 - ¿Cuál es el gasto medio por categoría de producto?
 (Las categorias son frutas/verdura, pescados, y productos varios, todo lo que no sea de los 2 primeros es un producto vario , sabiendo esto agruparíamos por categoría y calcularíamos el importe promedio (mean(Importe)), dando una visión del gasto por tipo de producto.)
 
+```{r}
+#Separamos por categorias frutas/verduras, pescado, y productos varios(el resto de productos)
+categorias <- productos %>%
+  mutate(
+    categoria = case_when(
+      grepl("PESCADO", Producto, ignore.case = TRUE) ~ "Pescado",
+      grepl("PLÁTANO|MANZANA|PERA|KIWI|LECHUGA|TOMATE|ZANAHORIA|CEBOLLA|FRUTA|VERDURA", Producto, ignore.case = TRUE) ~ "Frutas/Verduras",
+      TRUE ~ "Productos varios"
+    )
+  )
+
+#Ya separado por categorias calculamos el gasto medio de cada uno
+media_categorias <- categorias %>%
+  group_by(categoria) %>%
+  summarise(Gasto_Medio = mean(Importe, na.rm =TRUE)) %>%
+  arrange(desc(Gasto_Medio))
+
+media_categorias
+```
+De las tres categorias la que mayor gasto medio tiene es el pescado, con 7.90 aproximadamente, seguido de los productos varios con 2.75 y por ultimo las frutas/verduras con 1.75€ de media.
+
+
+
 - Muestra mediante un gráfico de líneas cómo ha variado el precio por kilo de las bananas y los plátanos en los tickets disponibles, a lo largo del tiempo.
 (Filtraríamos productos con esos nombres, uniríamos con info_tickets para obtener la fecha, agruparíamos por fecha y producto, calcularíamos el precio medio por kg (mean(PrecioKg)), y graficaríamos con ggplot2 usando líneas (geom_line()) y facetas (facet_wrap) para comparar ambas tendencias en el tiempo.)
+
+```{r}
+# Filtrar bananas y plátanos con PrecioKg conocido
+banana_platano <- productos %>%
+  filter(!is.na(PrecioKg)) %>%
+  filter(str_detect(tolower(Producto), "banana|plátano"))
+
+# Unir con info_tickets para obtener la fecha
+# Ojo: usa el data frame correcto donde esté la columna 'Fecha'
+banana_platano_fecha <- banana_platano %>%
+  left_join(info_tickets, by = "Factura_simplificada") %>%
+  filter(!is.na(Fecha))
+
+# Agrupar y calcular precio medio por fecha y producto
+precios_fecha <- banana_platano_fecha %>%
+  group_by(Fecha, Producto) %>%
+  summarise(PrecioMedioKg = mean(PrecioKg, na.rm = TRUE), .groups = "drop")
+
+# Graficar evolución
+ggplot(precios_fecha, aes(x = Fecha, y = PrecioMedioKg, color = Producto)) +
+  geom_line(size = 1) +
+  facet_wrap(~Producto, scales = "free_y") +
+  labs(title = "Evolución del precio por kilo de bananas y plátanos",
+       x = "Fecha", y = "Precio medio por Kg (€)") +
+  theme_minimal()
+```
+
+
+El gráfico revela que tanto el precio de las bananas como el de los plátanos ha tenido algunas oscilaciones a lo largo del tiempo, probablemente influenciadas por la estacionalidad, la logística o incluso promociones. En algunos momentos coinciden sus tendencias, mientras que en otros divergen. Este análisis visual permite anticipar comportamientos de precios y detectar oportunidades de ahorro… o de dieta.
