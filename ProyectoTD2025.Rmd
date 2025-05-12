@@ -83,20 +83,20 @@ library(kableExtra)
 
 ### Estructura de los datos originales y proceso de transformación
 
- Los datos brutos consisten en tickets en PDF almacenados en nuestra carpeta "data".
+ Los datos brutos consisten en tickets en formato PDF almacenados en nuestra carpeta "data".
 
  Para convertir estos datos crudos en informacion estruturada y correctamente almacenada realizamos un gran número de operaciones, entre las que vale la pena destacar:
  
- - La normalización de datos para unificar los decimales (convertimos las comas en puntos)
+ - La normalización de datos para unificar los decimales (convertimos las comas en puntos).
  
- - La validación correcta de tipos (nos aseguramos de que cada uno de nuestros campos tuviese el tipo de dato correcto)
+ - La validación correcta de tipos (nos aseguramos de que cada uno de nuestros campos tuviese el tipo de dato correcto).
  
- - Correcciones manuales necesarias como el filtrado de tickets válidos y la identificación de tickets repetidos terminados con "O╠ée╠ü┬╝"
+ - Correcciones manuales necesarias como el filtrado de tickets válidos y la identificación de tickets repetidos terminados con "O╠ée╠ü┬╝".
 
   Este proceso de transformación permite un análisis confiable en fases posteriores del proyecto. Los scripts completos de transformación están disponibles en el repositorio GitHub del proyecto.
 
 ## Descripción de variables
- En este apartado se presenta el análisis  detallado de las variables clave del dataset, organizado según su tipo (numéricas, categóricas, etc). Con el objetivo de visualizar mucho más fácil y entender a fondo cada una de estas variables. Como se muestra en la Tabla \@ref(tab:mi-tabla), estas son las variables utilizadas.
+ En este apartado se presenta el análisis  detallado de las variables clave del dataset, organizado según su tipo (numéricas, categóricas, etc). Con el objetivo de visualizar mucho más fácilmente y entender a fondo cada una de estas variables. Como se muestra en la Tabla \@ref(tab:mi-tabla), estas son las variables utilizadas.
 
 ```{r mi-tabla, echo=FALSE}
 
@@ -147,15 +147,13 @@ tabla <- df_variables %>%
 tabla  # Esto muestra la tabla
 ```
 
-# Importacion de datos
+# Importación de datos
 
-A partir de aqui comienza el proceso de  lectura, validación y extracción de datos de tickets de compra en PDF emitidos por Mercadona, comenzando por filtrar los archivos que contienen tickets válidos, para luego aplicar funciones específicas que extraen los datos generales del encabezado (fecha, hora, dirección, etc.), la información detallada de los productos (teniendo en cuenta diferentes formatos como unidades, múltiples cantidades o productos vendidos por peso) y los totales finales (incluyendo impuestos, pagos y detalles de parking), combinándolos finalmente en estructuras de datos listas para su análisis como se verá a continuacion.
+A partir de aquí comienza el proceso de  lectura, validación y extracción de datos de tickets de compra en PDF emitidos por Mercadona, comenzando por filtrar los archivos que contienen tickets válidos, para luego aplicar funciones específicas que extraen los datos generales del encabezado (fecha, hora, dirección, etc.), la información detallada de los productos (teniendo en cuenta diferentes formatos como unidades, múltiples cantidades o productos vendidos por peso) y los totales finales (incluyendo impuestos, pagos y detalles de parking), combinándolos finalmente en estructuras de datos listas para su análisis como se verá a continuación.
 
 ## Función de filtrado
 
-
-
-Lo primero que se hizo fue el filtrado de los datos, para ello programamos una funcion que se encarga de identificar y seleccionar únicamente aquellos archivos PDF que contienen tickets de Mercadona. Inicialmente, busca todos los archivos PDF presentes en una carpeta específica. Luego, descarta archivos cuyo nombre esté corrupto o alterado y verifica si es correcto el contenido del PDF. En concreto, intenta leer el documento, separarlo en líneas y confirmar que la primera línea contenga una marca característica de Mercadona. Por último, aplica este filtro a todos los archivos encontrados, obteniendo así una colección de tickets que cumplen con los criterios establecidos.
+Lo primero que se hizo fue el filtrado de los datos, para ello programamos una función que se encarga de identificar y seleccionar únicamente aquellos archivos PDF que contienen tickets de Mercadona. Inicialmente, busca todos los archivos PDF presentes en una carpeta específica. Luego, descarta archivos cuyo nombre esté corrupto o alterado y verifica si es correcto el contenido del PDF. En concreto, intenta leer el documento, separarlo en líneas y confirmar que la primera línea contenga una marca característica de Mercadona. Por último, aplica este filtro a todos los archivos encontrados, obteniendo así una colección de tickets que cumplen con los criterios establecidos.
 
 ```{r, echo=FALSE}
 # Obtener todos los archivos PDF en la carpeta data
@@ -182,15 +180,15 @@ tickets_mercadona <- tickets_mercadona[tickets_mercadona != "data/ticket1.pdf"]
 
 ```
 
-## Proceso de importacion
+## Proceso de importación
 
   El análisis de los datos y los patrones presentes en los distintos tickets de Mercadona resultaba ser una tarea compleja debido a la diversidad de información contenida en cada uno de ellos. Para facilitar el proceso y distribuir el trabajo de manera más eficiente entre los miembros del equipo, decidimos dividir la extracción de datos en tres partes. De esta manera, cada miembro podía centrarse en una sección específica de la información, lo que nos permitió abarcar un mayor volumen de datos en un menor periodo de tiempo. Esta estrategia también tenía la ventaja de que podíamos realizar pruebas de forma independiente en cada parte, asegurándonos de que no existieran errores o inconsistencias antes de combinar todo en un solo flujo de trabajo.
 
-Sin embargo, después de realizar algunas pruebas, nos dimos cuenta de que había una forma aún más eficiente de organizar la información. Optamos por un enfoque alternativo: en lugar de juntar todos los datos de los tickets en un solo conjunto, decidimos crear dos data frames distintos para organizar mejor la información. El primer data frame almacenaría la información general de cada ticket, como datos de la compra en su conjunto, mientras que el segundo se dedicaría exclusivamente a los productos de cada ticket, permitiéndonos tener un nivel de detalle más preciso. Este enfoque no solo mejoró la claridad, sino que también evitó redundancias de datos, lo cual es fundamental cuando se trabaja con grandes volúmenes de información.
+  Sin embargo, después de realizar algunas pruebas, nos dimos cuenta de que había una forma aún más eficiente de organizar la información. Optamos por un enfoque alternativo: en lugar de juntar todos los datos de los tickets en un solo conjunto, decidimos crear dos data frames distintos para organizar mejor la información. El primer data frame almacenaría la información general de cada ticket, como datos de la compra en su conjunto, mientras que el segundo se dedicaría exclusivamente a los productos de cada ticket, permitiéndonos tener un nivel de detalle más preciso. Este enfoque no solo mejoró la claridad, sino que también evitó redundancias de datos, lo cual es fundamental cuando se trabaja con grandes volúmenes de información.
 
-Para poder vincular ambos data frames de forma adecuada, elegimos utilizar la factura simplificada de cada producto como clave de conexión. Esto nos permitió establecer una relación directa entre el ticket general y los productos asociados sin perder el contexto original de cada compra. De esta forma, cada producto podía estar asociado de manera única a su correspondiente ticket, asegurando que la información estuviera correctamente organizada y lista para el análisis posterior.
+  Para poder vincular ambos data frames de forma adecuada, elegimos utilizar la factura simplificada de cada producto como clave de conexión. Esto nos permitió establecer una relación directa entre el ticket general y los productos asociados sin perder el contexto original de cada compra. De esta forma, cada producto podía estar asociado de manera única a su correspondiente ticket, asegurando que la información estuviera correctamente organizada y lista para el análisis posterior.
 
-Este enfoque no solo mejoró la estructura de nuestros datos, sino que también facilitó el procesamiento y análisis de la información, ya que cada conjunto de datos era más manejable y flexible para ser trabajado en distintos análisis. A largo plazo, esta organización resultó ser mucho más eficiente y escalable, permitiéndonos realizar análisis más complejos sin perder claridad o introduciendo redundancias innecesarias.
+  Este enfoque no solo mejoró la estructura de nuestros datos, sino que también facilitó el procesamiento y análisis de la información, ya que cada conjunto de datos era más manejable y flexible para ser trabajado en distintos análisis. A largo plazo, esta organización resultó ser mucho más eficiente y escalable, permitiéndonos realizar análisis más complejos sin perder claridad o introduciendo redundancias innecesarias.
 
 
 ### Función de extracción de información (parte 1)
@@ -256,7 +254,7 @@ funcion_df_parte1 <- function(lineas){
   
 ### Función de extracción de información (parte 2)
 
-Esta funcion se encarga de identificar y extraer los productos que aparecen en el ticket. Para ello, recorre las líneas que corresponden a la sección de productos, distinguiendo entre los artículos que se venden por unidad, aquellos que se compran en varias unidades y los que se cobran por peso (como frutas o verduras). Emplea expresiones regulares (patrones) para reconocer los distintos formatos de línea y va añadiendo cada producto con sus características (cantidad, precio, importe, etc.) a una tabla.
+Esta función se encarga de identificar y extraer los productos que aparecen en el ticket. Para ello, recorre las líneas que corresponden a la sección de productos, distinguiendo entre los artículos que se venden por unidad, aquellos que se compran en varias unidades y los que se cobran por peso (como frutas o verduras). Emplea expresiones regulares (patrones) para reconocer los distintos formatos de línea y va añadiendo cada producto con sus características (cantidad, precio, importe, etc.) a una tabla.
 
 ```{r, echo=FALSE}
 # Patrones de las líneas con productos que vayan por unidad, por unidad pero que la cantidad sea mayor a 1 y por peso, respectivamente.
@@ -393,7 +391,7 @@ parse_lineas_ticket <- function(lineas) {
 
 ### Función de extracción de información (parte 3)
 
-Con este tercer bloque se recoge la parte final del ticket. En esta sección se extraen valores como el total a pagar, la parte abonada con tarjeta, detalles sobre el parking (incluyendo horas de entrada y salida), información sobre la tarjeta (últimos dígitos, tipo) y datos relacionados con los impuestos (IVA), finalizando asi la extraccion de informacion.
+Con este tercer bloque se recoge la parte final del ticket. En esta sección se extraen valores como el total a pagar, la parte abonada con tarjeta, detalles sobre el parking (incluyendo horas de entrada y salida), información sobre la tarjeta (últimos dígitos, tipo) y datos relacionados con los impuestos (IVA), finalizando así la extracción de información.
 
 ```{r, echo=FALSE}
 funcion_df_parte3 <- function(lineas){
@@ -510,7 +508,7 @@ funcion_df_parte3 <- function(lineas){
 
 ### Bucle de generación del DataFrame
 
-Por último, creamos un bloque de iteración que recorre cada uno de los tickets previamente filtrados. Para cada ticket se obtiene el texto completo, se lo divide en líneas y se aplican las funciones anteriores con el fin de extraer la información general, los productos y los datos del final del ticket. Finalmente, los datos obtenidos se van acumulando en distintas tablas y se combinan, quedando listas para su análisis.
+Por último, creamos un bloque de iteración que recorre cada uno de los tickets previamente filtrados. Para cada ticket se obtiene el texto completo, se divide en líneas y se aplican las funciones anteriores con el fin de extraer la información general, los productos y los datos del final del ticket. Finalmente, los datos obtenidos se van acumulando en distintas tablas y se combinan, quedando listas para su análisis.
 
 ```{r, echo=FALSE}
 
@@ -582,18 +580,18 @@ info_tickets <- cbind(df_info_ticket_parte1, df_info_ticket)
 
 # Preguntas
 
-El análisis de los datos provenientes de los tickets de Mercadona nos ofrece una oportunidad única para entender diversos aspectos del comportamiento de compra de los consumidores. Para la realizacion de este estudio, hemos planteado una serie de preguntas que nos permiten explorar diferentes aspectos de la información que hemos recolectado, desde patrones de gasto hasta la influencia de factores externos como el municipio o la estación del año.
+El análisis de los datos provenientes de los tickets de Mercadona nos ofrece una oportunidad única para entender diversos aspectos del comportamiento de compra de los consumidores. Para la realización de este estudio, hemos planteado una serie de preguntas que nos permiten explorar diferentes aspectos de la información que hemos recolectado, desde patrones de gasto hasta la influencia de factores externos como el municipio o la estación del año.
 
 Estas preguntas están diseñadas para abordar tanto la variabilidad en los hábitos de compra de los consumidores, como para evaluar la relación entre factores como el precio, la cantidad de productos comprados, y la hora de compra. La intención no solo es obtener respuestas concretas, sino también identificar patrones, tendencias y relaciones que podrían ser útiles para tomar decisiones comerciales o para comprender mejor el comportamiento de los clientes en Mercadona.
 
-Cada una de las preguntas que hemos planteado se dirige a explorar un aspecto particular del conjunto de datos. Algunas están orientadas a comprender el comportamiento de compra a lo largo del tiempo, otras se enfocan en las diferencias entre municipios o categorías de productos. En conjunto, estas preguntas nos proporcionan una visión más completa de los hábitos de consumo y cómo estos pueden influir en la gestión de inventarios, precios y quizas hasta estrategias de marketing.
+Cada una de las preguntas que hemos planteado se dirige a explorar un aspecto particular del conjunto de datos. Algunas están orientadas a comprender el comportamiento de compra a lo largo del tiempo, otras se enfocan en las diferencias entre municipios o categorías de productos. En conjunto, estas preguntas nos proporcionan una visión más completa de los hábitos de consumo y cómo estos pueden influir en la gestión de inventarios, precios y quizás hasta estrategias de marketing.
 
 A continuación, se presentan las preguntas que guían este análisis, con el objetivo de ofrecer una vista general de los frutos de este estudio:
 
 
 ## ¿Cuál es el ticket de mayor importe registrado? ¿Qué productos incluye?
 
-Hay días en los que uno entra al supermercado con la intención de comprar "solo una cosa" y termina saliendo con el carrito lleno hasta los topes. Seguro que te ha pasado. Gracias a este DF, podemos a buscar a esa persona que decidió no dejar nada fuera de la lista: el cliente que hizo la compra más cara de todas. Nuestro objetivo es encontrar aquel ticket con el importe mas alto y curiosear qué productos justificaron semejante gasto. Para ello podemos ver en los graficos \@ref(fig:top20) y \@ref(fig:alltop) cual es el ticket con el importe mas alto y que tan alto es con respecto al resto.
+Hay días en los que uno entra al supermercado con la intención de comprar "solo una cosa" y termina saliendo con el carrito lleno hasta los topes. Seguro que te ha pasado. Gracias a este DF, podemos buscar a esa persona que decidió no dejar nada fuera de la lista: el cliente que hizo la compra más cara de todas. Nuestro objetivo es encontrar aquel ticket con el importe más alto y curiosear qué productos justificaron semejante gasto. Para ello, podemos ver en los gráficos \@ref(fig:top20) y \@ref(fig:alltop) cuál es el ticket con el importe más alto y qué tan alto es con respecto al resto.
 
 
 ```{r,echo=FALSE}
@@ -649,7 +647,7 @@ ggplot(info_tickets, aes(x = Factura_simplificada, y = Importe_Final)) +
 
 ```
 
-Como se puede observar, el ticket con mayor gasto es aquel al que le corresponde la factura simplificada: 4530-021-052628 cuyos datos se pueden ver en la tabla \@ref(tab:tmi) y los productos que le corresponden se muestran en la tabla \@ref(tab:pm) .
+Como se puede observar, el ticket con mayor gasto es aquel al que le corresponde la factura simplificada: 4530-021-052628, cuyos datos se pueden ver en la tabla \@ref(tab:tmi) y los productos que le corresponden se muestran en la tabla \@ref(tab:pm) .
 
 ```{r tmi, echo=FALSE}
 
@@ -689,7 +687,7 @@ productos_max %>%
 
 ## ¿Cuál es el importe medio de los tickets por municipio? ¿Se observan diferencias significativas entre zonas?
 
-Todos sabemos que no es lo mismo hacer la compra en el centro de una gran ciudad que en un pequeño pueblo. A veces cambia el ritmo, otras veces los precios, y en más de una ocasión, lo que llevamos en la cesta. Con esta pregunta buscamos saber si hay municipios cuyos gatos sean mayores que otros: ¿dónde se registran tickets con un importe medio más alto? Veamos si hay municipios que destacan y si esas diferencias llaman la atención. 
+Todos sabemos que no es lo mismo hacer la compra en el centro de una gran ciudad que en un pequeño pueblo. A veces cambia el ritmo, otras veces los precios, y en más de una ocasión, lo que llevamos en la cesta. Con esta pregunta, buscamos saber si hay municipios cuyos gatos sean mayores que otros: ¿dónde se registran tickets con un importe medio más alto? Veamos si hay municipios que destacan y si esas diferencias llaman la atención. 
 
 ```{r im, echo=FALSE}
 importe_municipio <- info_tickets %>%
@@ -711,7 +709,7 @@ importe_municipio %>%
   )
 ```
 
-Como se puede ver en la tabla \@ref(tab:im) al analizar el importe medio de los tickets por municipio, se observan diferencias claras entre unas zonas y otras. Algunos municipios muestran un gasto promedio considerablemente más alto, lo que podría estar relacionado con distintos factores como el tamaño de las compras, la frecuencia con que se realizan, o incluso el perfil socioeconómico de la población. Estas variaciones indican que, efectivamente, no todos los municipios compran de la misma manera, y algunos tienden a realizar compras más costosas en promedio. Para una vista mas clara se puede observar tambien la figura \@ref(fig:importemunicipio).
+Como se puede ver en la tabla \@ref(tab:im) al analizar el importe medio de los tickets por municipio, se observan diferencias claras entre unas zonas y otras. Algunos municipios muestran un gasto promedio considerablemente más alto, lo que podría estar relacionado con distintos factores como el tamaño de las compras, la frecuencia con que se realizan, o incluso el perfil socioeconómico de la población. Estas variaciones indican que, efectivamente, no todos los municipios compran de la misma manera, y algunos tienden a realizar compras más costosas en promedio. Para una vista más clara, se puede observar tambien la figura \@ref(fig:importemunicipio).
 
 ```{r importemunicipio, fig.height=5, fig.cap = "Importe Medio por municipio", echo=FALSE}
 
@@ -739,7 +737,7 @@ ggplot(importe_municipio, aes(x = reorder(Municipio, Importe_Medio), y = Importe
 
 ## ¿Cuál es la procedencia de los tickets? ¿Qué ciudad/pueblo tiene un mayor número de tickets?
 
-Imaginemos que tenemos una gran caja registradora que guarda todos los tickets de Mercadona repartidos por pueblos y ciudades. Al abrirla, nos interesa saber de dónde viene la mayor parte del papel: ¿qué municipio aparece más veces en nuestro conjunto de datos? Es como contar votos en unas elecciones, pero aquí en vez de papeletas tenemos compras. Esta información nos puede dar una idea de dónde hay más actividad o más afluencia a las tiendas.
+Imaginemos que tenemos una gran caja registradora que guarda todos los tickets de Mercadona repartidos por pueblos y ciudades. Al abrirla, nos interesa saber de dónde viene la mayor parte del papel: ¿qué municipio aparece más veces en nuestro conjunto de datos? Es como contar votos en unas elecciones, pero aquí en vez de papeletas tenemos compras. Esta información nos puede dar una idea de dónde hay más actividad o más afluencia en las tiendas.
 
 ```{r tm, echo=FALSE}
 
@@ -761,7 +759,7 @@ tickets_por_municipio %>%
   )
 ```
 
-Como se ve en la tabla \@ref(tab:tm) La mayoría de los tickets registrados provienen de un número reducido de municipios, siendo uno de ellos el que concentra el mayor volumen de compras. Se puede apreciar que Valencia destaca claramente por encima del resto, lo que sugiere una mayor frecuencia de compra o una mayor cantidad de transacciones en esa zona. Es posible que en ese lugar haya más tiendas, una mayor densidad de población, una clientela muy fiel a Mercadona o simplemente que nuestra muestra de datos este sesgada a este municipio. Esto se puede visualizar mas facilmente en la grafica \@ref(fig:timu)
+Como se ve en la tabla \@ref(tab:tm) , la mayoría de los tickets registrados provienen de un número reducido de municipios, siendo uno de ellos el que concentra el mayor volumen de compras. Se puede apreciar que Valencia destaca claramente por encima del resto, lo que sugiere una mayor frecuencia de compra o una mayor cantidad de transacciones en esa zona. Es posible que en ese lugar haya más tiendas, una mayor densidad de población, una clientela muy fiel a Mercadona o simplemente que nuestra muestra de datos esté sesgada a este municipio. Esto se puede visualizar más fácilmente en la gráfica \@ref(fig:timu)
 
 ```{r timu, fig.height=5, fig.cap = "Número de tickets por municipio", echo=FALSE}
 
@@ -783,7 +781,7 @@ ggplot(tickets_por_municipio, aes(x = reorder(Municipio, Total_Tickets), y = Tot
 
 ## ¿Qué porcentaje de las compras son de productos con peso (por kilo) frente a productos por unidad?
 
-Cuando vamos al supermercado, es común ver etiquetas con productos que se venden por kilo (como la fruta, la carne o el pescado) y otros que se venden por unidad (como los packs de galletas o las botellas de agua). Pero, ¿alguna vez os habeis detenido a pensar cuál de estos tipos de productos es el más frecuente en las compras? ¿Somos más de llevar un kilo de manzanas o de escoger una caja de cereales? Vamos a analizar cómo se distribuyen las compras entre estos dos tipos de productos y qué porcentaje de nuestras cestas se llena con lo que pesamos frente a lo que contamos por unidad.
+Cuando vamos al supermercado, es común ver etiquetas con productos que se venden por kilo (como la fruta, la carne o el pescado) y otros que se venden por unidad (como los packs de galletas o las botellas de agua). Pero, ¿alguna vez os habéis detenido a pensar cuál de estos tipos de productos es el más frecuente en las compras? ¿Somos más de llevar un kilo de manzanas o de escoger una caja de cereales? Vamos a analizar cómo se distribuyen las compras entre estos dos tipos de productos y qué porcentaje de nuestras cestas se llena con lo que pesamos frente a lo que contamos por unidad.
 
 <div style="display: flex; justify-content: space-around; align-items: flex-start; gap: 20px;">
 
@@ -814,11 +812,11 @@ ggplot(totales_globales, aes(x = tipo, y = Porcentaje, fill = tipo)) + geom_bar(
 ``` 
 </div> </div>
 
-Al observar la tabla \@ref(tab:ttg) y el grafico \@ref(fig:porcent), se puede notar que una gran parte de las compras están compuestas por productos que se venden por unidad, como es el caso de los artículos de uso diario o de empaques predefinidos.Podemos llegar a la conclusion de que el porcentaje de productos con peso frente a los de unidad puede variar dependiendo del tipo de compra, pero en general, los productos por unidad parecen ser considerablememte más frecuentes en la mayoría de los tickets.
+Al observar la tabla \@ref(tab:ttg) y el gráfico \@ref(fig:porcent), se puede notar que una gran parte de las compras están compuestas por productos que se venden por unidad, como es el caso de los artículos de uso diario o de empaques predefinidos. Podemos llegar a la conclusión de que el porcentaje de productos con peso frente a los de unidad puede variar dependiendo del tipo de compra, pero en general, los productos por unidad parecen ser considerablememte más frecuentes en la mayoría de los tickets.
 
 ## ¿Qué cantidad de productos es la más habitual en los tickets?
 
-Cuando hacemos la compra, hay quienes llenan el carrito con solo unos pocos productos esenciales, mientras que otros pueden hacer una compra más extensa, cargando varias decenas de artículos. Pero, ¿cuál es la cantidad de productos más comúnmente registrada en un ticket promedio? ¿Nos estamos acercando más a la "compra rápida" o a la "compra de abastecimiento total"? Mediante el grafico \@ref(fig:Fcp) podemos encontrar qué cantidad de productos aparece con mayor frecuencia y si estamos más cerca de hacer compras pequeñas o grandes.
+Cuando hacemos la compra, hay quienes llenan el carrito con solo unos pocos productos esenciales, mientras que otros pueden hacer una compra más extensas, cargando varias decenas de artículos. Pero, ¿cuál es la cantidad de productos más comúnmente registrada en un ticket promedio? ¿Nos estamos acercando más a la "compra rápida" o a la "compra de abastecimiento total"? Mediante el gráfico \@ref(fig:Fcp) podemos encontrar qué cantidad de productos aparece con mayor frecuencia y si estamos más cerca de hacer compras pequeñas o grandes.
 
 ```{r Fcp,fig.cap = "Frecuencia de cantidades de productos", echo=FALSE}
 # Filtrar las cantidades de productos por unidad
@@ -844,7 +842,7 @@ ggplot(cantidades_frecuentes, aes(x = as.factor(Cantidad), y = n, fill = as.fact
 
 ```
 
-Al analizar los datos, se observa que la cantidad de productos más habitual en los tickets tiende bastante a ser baja (literalmente de una unidad de producto). Es decir, la mayoría de los tickets reflejan compras mínimas de la mayoria de productos, lo que sugiere que la mayoría de los clientes tienden a hacer compras diarias o semanales, que nunca llegan a ser compras masivas, por lo menos no de un mismo producto.
+Al analizar los datos, se observa que la cantidad de productos más habitual en los tickets tiende bastante a ser baja (literalmente de una unidad de producto). Es decir, la mayoría de los tickets reflejan compras mínimas de la mayoría de productos, lo que sugiere que la mayoría de los clientes tienden a hacer compras diarias o semanales, que nunca llegan a ser compras masivas, por lo menos no de un mismo producto.
 
 
 ##  Si consideramos la categoría de PESCADO. ¿Cuáles son los 5 productos más vendidos? ¿Cuántos kilos se han vendido de cada uno de estos productos?
@@ -879,7 +877,7 @@ En la categoría de Pescado, los cinco productos más vendidos incluyen una comb
 
 ## Muestra mediante un diagrama el número de tickets recogidos cada día de la semana. Si tuvieses que cerrar un día entre semana,  ¿qué día lo harías?
 
-Cuando se trata de elegir el mejor día para hacer compras, no todos los días son iguales. Al igual que ocurre en los centros comerciales o en cualquier tienda, hay días de la semana en los que la afluencia de clientes es mucho mayor. Pero, ¿y si tuviéramos que elegir un día entre semana para cerrar? Analizando el número de tickets registrados por día, podemos descubrir qué día de la semana es en el que menos clientes se atreven a visitar Mercadona, para ello podemos agrupar los datos por dia de la semana y graficarlos.
+Cuando se trata de elegir el mejor día para hacer compras, no todos los días son iguales. Al igual que ocurre en los centros comerciales o en cualquier tienda, hay días de la semana en los que la afluencia de clientes es mucho mayor. Pero, ¿y si tuviéramos que elegir un día entre semana para cerrar? Analizando el número de tickets registrados por día, podemos descubrir qué día de la semana es en el que menos clientes se atreven a visitar Mercadona, para ello podemos agrupar los datos por día de la semana y graficarlos.
 
 
 ```{r diasem,fig.cap = "Número de tickets por día de la semana", echo=FALSE}
@@ -891,7 +889,7 @@ ggplot(tickets_por_dia, aes(x=Dia_Semana, y=Total_Tickets)) +
   geom_col(aes(fill=Dia_Semana))
 ```
 
-Al analizar el grafico \@ref(fig:diasem) con número de tickets recogidos por cada día de la semana, se puede observar que el jueves es el día con la menor cantidad de compras y clientes. Este patrón resalta frente al resto de la semana, donde otros días, como el lunes o el sábado, muestran un mayor volumen de transacciones. Si se tuviera que elegir un día entre semana para cerrar, el jueves sería la opción más lógica, ya que es el día con menor actividad de compra.
+Al analizar el gráfico \@ref(fig:diasem) con número de tickets recogidos por cada día de la semana, se puede observar que el jueves es el día con la menor cantidad de compras y clientes. Este patrón resalta frente al resto de la semana, donde otros días, como el lunes o el sábado, muestran un mayor volumen de transacciones. Si se tuviera que elegir un día entre semana para cerrar, el jueves sería la opción más lógica, ya que es el día con menor actividad de compra.
 
 ## ¿Qué categorías tienen mayor variabilidad en el precio a lo largo del tiempo?
 
@@ -947,7 +945,7 @@ Al revisar las categorías de productos, algunas muestran una mayor fluctuación
 
 ## ¿Qué relación hay entre el tiempo de estancia en el parking y el importe del ticket?
 
-Ir al supermercado puede ser una experiencia rapida de cinco minutos o convertirse en toda una excursión de una hora. El tiempo que pasamos en el parking puede darnos pistas sobre qué tipo de compra hemos hecho: ¿solo un par de cosas o una gran compra mensual? Filtrando los tickets por tiempo de parking, vamos a investigar si existe una relación entre cuánto tiempo permanece una persona en el aparcamiento y cuánto dinero termina gastando.
+Ir al supermercado puede ser una experiencia rápida de cinco minutos o convertirse en toda una excursión de una hora. El tiempo que pasamos en el parking puede darnos pistas sobre qué tipo de compra hemos hecho: ¿solo un par de cosas o una gran compra mensual? Filtrando los tickets por tiempo de parking, vamos a investigar si existe una relación entre cuánto tiempo permanece una persona en el aparcamiento y cuánto dinero termina gastando.
 
 ```{r tep,fig.cap = "Relación entre estadía en el parking e importe del ticket", echo=FALSE}
 
@@ -961,12 +959,12 @@ ggplot(tiempo_ticket, aes(x=Tiempo, y=Importe_Final)) +
   geom_point() +
   geom_smooth(method = "lm", col = "red", se = FALSE)
 ```
-Al analizar el esquema \@ref(fig:tep), se observa una relación clara entre el tiempo de estancia en el parking y el importe del ticket: en general, cuanto más tiempo pasa una persona en el supermercado, mayor es el gasto realizado. Esto sugiere que las compras rápidas suelen ser de menor importe, mientras que quienes dedican más tiempo tienden a hacer compras más grandes o detalladas. Sin embargo, también hay excepciones: hay quien se pasa 60 minutos y no se lleva nada a casa, ya sea por indecision o por distraccion
+Al analizar el esquema \@ref(fig:tep), se observa una relación clara entre el tiempo de estancia en el parking y el importe del ticket: en general, cuanto más tiempo pasa una persona en el supermercado, mayor es el gasto realizado. Esto sugiere que las compras rápidas suelen ser de menor importe, mientras que quienes dedican más tiempo tienden a hacer compras más grandes o detalladas. Sin embargo, también hay excepciones: hay quien se pasa 60 minutos y no se lleva nada a casa, ya sea por indecisión o por distracción.
 
 
 ## ¿Cuál es la distribución del gasto total por ticket? ¿Es simétrica o presenta valores extremos?
 
-No todos gastamos lo mismo cuando vamos al supermercado: hay quien va a por pan y leche, y quien parece que está abasteciendo un refugio para seis meses. Esto se refleja en la distribución del gasto total por ticket. Al analizarla, podemos ver si la mayoría de las compras están en un rango similar o si hay algunas que se van por las nubes. Es como mirar una gráfica y preguntarse: ¿esto parece una campana equilibrada o más bien una montaña con una larga cuesta hacia un lado?
+No todos gastamos lo mismo cuando vamos al supermercado: hay quienes van a por pan y leche, y quienes parece que están abasteciendo un refugio para seis meses. Esto se refleja en la distribución del gasto total por ticket. Al analizarla, podemos ver si la mayoría de las compras están en un rango similar o si hay algunas que se van por las nubes. Es como mirar una gráfica y preguntarse: ¿esto parece una campana equilibrada o más bien una montaña con una larga cuesta hacia un lado?
 
 ```{r dgtt,fig.cap = "Distribución del importe de los tickets", echo=FALSE}
 ggplot(info_tickets, aes(x = Importe_Final)) +
@@ -984,13 +982,13 @@ ggplot(info_tickets, aes(x = Importe_Final)) +
   )
 
 ```
-La distribución del gasto total por ticket no es simétrica. La mayoría de los tickets se agrupan en torno a importes bajos o moderados, pero también existen compras con importes significativamente más altos que estiran la distribución hacia un extremo tal como se ve en la grafica \@ref(fig:dgtt). Esto indica la presencia de valores extremos o compras atípicas que, aunque poco frecuentes, influyen en el comportamiento general del gasto.
+La distribución del gasto total por ticket no es simétrica. La mayoría de los tickets se agrupan en torno a importes bajos o moderados, pero también existen compras con importes significativamente más altos que estiran la distribución hacia un extremo tal como se ve en la gráfica \@ref(fig:dgtt). Esto indica la presencia de valores extremos o compras atípicas que, aunque poco frecuentes, influyen en el comportamiento general del gasto.
 
 
 
 ## ¿Qué 5 productos son más frecuentes por estación del año?
 
-Las estaciones no solo cambian el clima, también cambian lo que metemos en el carrito. En verano buscamos cosas frescas, en invierno guisos que reconforten, y en primavera... bueno, primavera es como un aperitivo del verano. Al mirar los datos por estaciones, podemos descubrir qué productos son los verdaderos protagonistas según la época del año. Para ello separamos las los productos por fechas y estaciones y luego los agrupamos para contarlos, con lo cual podemos ver qué cinco productos brillan con luz propia en cada estación.
+Las estaciones no solo cambian el clima, también cambian lo que metemos en el carrito. En verano, buscamos cosas frescas; en invierno guisos que reconforten; y en primavera... bueno, primavera es como un aperitivo del verano. Al mirar los datos por estaciones, podemos descubrir qué productos son los verdaderos protagonistas según la época del año. Para ello separamos los productos por fechas y estaciones y luego los agrupamos para contarlos, con lo cual podemos ver qué cinco productos brillan con luz propia en cada estación.
 
 ```{r 5mf, fig.height=10, fig.cap = "Productos mas frecuentes por estacion", echo=FALSE}
 
@@ -1070,7 +1068,7 @@ g4 <- tickets_otonyo %>%
 (g1 / g2 / g3 / g4) + plot_layout(ncol = 1)
 ```
 
-Como se puede ver en la figura \@ref(fig:5mf), La lista de productos más frecuentes cambia considerablemente de una estación a otra, lo que refleja una notable variabilidad en los hábitos de consumo a lo largo del año. Cada estación presenta un conjunto distinto de productos destacados, lo cual sugiere que factores como la temperatura, las festividades o la disponibilidad estacional influyen directamente en lo que los clientes compran. Esta diversidad estacional pone de manifiesto que el comportamiento de compra no es uniforme, sino que se adapta al contexto del momento (excepto quizas por el platano, que aparentemente a todos les gusta).
+Como se puede ver en la figura \@ref(fig:5mf), la lista de productos más frecuentes cambia considerablemente de una estación a otra, lo que refleja una notable variabilidad en los hábitos de consumo a lo largo del año. Cada estación presenta un conjunto distinto de productos destacados, lo cual sugiere que factores como la temperatura, las festividades o la disponibilidad estacional influyen directamente en lo que los clientes compran. Esta diversidad estacional pone de manifiesto que el comportamiento de compra no es uniforme, sino que se adapta al contexto del momento (excepto quizás por el plátano, que aparentemente a todos les gusta).
 
 ## ¿Cuál es la hora promedio de compra? ¿Los hábitos cambian en diferentes municipios?
 
@@ -1098,11 +1096,11 @@ ggplot(hora_media_municipios, aes(x=Hora_Media, y=Municipio)) +
   theme(axis.text.x = element_text(angle = 30, vjust = 0.5, hjust = 1)) +
   geom_vline(xintercept = hora_media[[1]], color = "red", size = 0.75)
 ```
-Como se ve en la grafica \@ref(fig:hpc) la hora promedio de compra varía entre municipios, lo que indica que los hábitos de consumo no son uniformes en todas las zonas. Aunque existe una franja horaria común donde se concentra la mayoría de las compras —normalmente en torno al mediodía o por la tarde—, algunos municipios muestran una tendencia más marcada hacia horarios tempranos o tardíos. Estas diferencias pueden deberse a factores como el estilo de vida local, el horario laboral predominante o incluso la ubicación de los supermercados en relación con las zonas residenciales.
+Como se ve en la gráfica \@ref(fig:hpc), la hora promedio de compra varía entre municipios, lo que indica que los hábitos de consumo no son uniformes en todas las zonas. Aunque existe una franja horaria común donde se concentra la mayoría de las compras —normalmente en torno al mediodía o por la tarde—, algunos municipios muestran una tendencia más marcada hacia horarios tempranos o tardíos. Estas diferencias pueden deberse a factores como el estilo de vida local, el horario laboral predominante o incluso la ubicación de los supermercados en relación con las zonas residenciales.
 
 ## ¿Cuál es el importe medio por kilogramo en productos de FRUTAS Y VERDURAS frente a PESCADO?
 
-Estoy seguro de que todos sabemos que todos los kilos pesan igual.. al menos en el bolsillo. Comprar un kilo de manzanas no cuesta lo mismo que un kilo de salmon, y eso lo sabemos todos los que hemos tenido que elegir entre hacer una ensalada o preparar una cena más sofisticada. En esta pregunta queremos comparar el importe medio por kilogramo entre dos grandes grupos: las frutas y verduras, y el pescado. Es una forma sencilla de ver cuál de estas categorías representa una mayor inversión por parte del consumidor, La cual podemos resolver agrupando por estas categorias.
+Estoy seguro de que todos sabemos que todos los kilos pesan igual.. al menos en el bolsillo. Comprar un kilo de manzanas no cuesta lo mismo que un kilo de salmón, y eso lo sabemos todos los que hemos tenido que elegir entre hacer una ensalada o preparar una cena más sofisticada. En esta pregunta queremos comparar el importe medio por kilogramo entre dos grandes grupos: las frutas y verduras, y el pescado. Es una forma sencilla de ver cuál de estas categorías representa una mayor inversión por parte del consumidor, la cual podemos resolver agrupando por estas categorias.
 
 ```{r pmpkg,fig.cap = "Precio medio por Kg", echo=FALSE}
 
@@ -1161,7 +1159,7 @@ ggplot(importe_municipio_unidad, aes(x = reorder(Municipio, ImportePromedioUnida
   theme_minimal()
 ```
 
-Como se puede ver en la figura \@ref(fig:ipma), se observa que ciertos municipios tienen tickets con importes promedio más altos en productos por unidad, tales como requena, sagunto y alcoy. Esto podría deberse a factores como la preferencia por marcas de mayor calidad, la adquisición de productos en cantidades más grandes o un mayor gasto por persona. 
+Como se puede ver en la figura \@ref(fig:ipma), se observa que ciertos municipios tienen tickets con importes promedio más altos en productos por unidad, tales como Requena, Sagunto y Alcoy. Esto podría deberse a factores como la preferencia por marcas de mayor calidad, la adquisición de productos en cantidades más grandes o un mayor gasto por persona. 
 
 ## ¿Cuáles son los 5 productos, de los vendidos por unidades, con más ventas? ¿Cuántas unidades de cada uno se han vendido?
 
@@ -1190,13 +1188,13 @@ ggplot(top_unidades, aes(x = reorder(Producto, UnidadesVendidas), y = UnidadesVe
 
 ```
 
-Los cinco productos más vendidos por unidad incluyen aquellos artículos que son esenciales en la mayoría de las compras, como pan, productos enlatados, pescado y ¿Bolsas plastico? Al analizar la figura \@ref(fig:pvpu), podemos ver que las unidades vendidas de estos productos son muy altas, lo que refleja su popularidad y el consumo frecuente entre los clientes. Algunos de estos productos, al ser de uso diario, tienen una rotación muy alta, convirtiéndolos en los más vendidos por unidad.
+Los cinco productos más vendidos por unidad incluyen aquellos artículos que son esenciales en la mayoría de las compras, como pan, productos enlatados, pescado y ¿bolsas de plástico? Al analizar la figura \@ref(fig:pvpu), podemos ver que las unidades vendidas de estos productos son muy altas, lo que refleja su popularidad y el consumo frecuente entre los clientes. Algunos de estos productos, al ser de uso diario, tienen una rotación muy alta, convirtiéndolos en los más vendidos por unidad.
 
 
 
 ## Si consideramos la categoría de FRUTAS Y VERDURAS. ¿Cuáles son los 5 productos más vendidos? ¿Cuántos kilos se han vendido de cada uno de estos productos?
 
-Las frutas y verduras son esenciales en nuestra dieta, y no es raro que algunos de estos productos se vendan más que otros. Pero, ¿cuáles son los que más se repiten en las compras? ¿Y cuántos kilos de cada uno se han vendido a lo largo del tiempo? Al analizar esta categoría, podemos identificar qué productos frescos dominan las estanterías de Mercadona y cuánto se está consumiendo de cada uno. Ademas podremos reutilizar el filtrado que se hizo en la pregunta 13 para ahorrarnos parte del trabajo 
+Las frutas y verduras son esenciales en nuestra dieta, y no es raro que algunos de estos productos se vendan más que otros. Pero, ¿cuáles son los que más se repiten en las compras? ¿Y cuántos kilos de cada uno se han vendido a lo largo del tiempo? Al analizar esta categoría, podemos identificar qué productos frescos dominan las estanterías de Mercadona y cuánto se está consumiendo de cada uno. Además, podremos reutilizar el filtrado que se hizo en la pregunta 13 para ahorrarnos parte del trabajo.
 
 
 ```{r fyv, echo=FALSE}
@@ -1222,7 +1220,7 @@ tibble(m_5_frutas_verduras) %>%
 
 
 ```
-El ranking obtenido (figura \@ref(tab:fyv)) muestra que la fruta/verdura mas vendida es el platano que se han vendido 56.306 Kg, con mas del doble de kg vendidos sobre el segundo que es la banana con 25.978 Kg. Los productos más vendidos en la categoría de frutas y verduras son aquellos que suelen formar parte de la base de muchas recetas y comidas diarias, como plátanos que se han vendido 56.306 Kg, la banana con 25.978 Kg, y la sandia con 22.84kg. Al revisar los datos, se  refleja tanto su alta demanda como su accesibilidad en casi todas las compras de alimentos frescos.
+El ranking obtenido (figura \@ref(tab:fyv)) muestra que la fruta/verdura más vendida es el plátano, del cual se han vendido 56.306 Kg, con más del doble de kg vendidos sobre el segundo, que es la banana con 25.978 Kg. Los productos más vendidos en la categoría de frutas y verduras son aquellos que suelen formar parte de la base de muchas recetas y comidas diarias, como plátanos que se han vendido 56.306 Kg, la banana con 25.978 Kg, y la sandía con 22.84kg. Al revisar los datos, se  refleja tanto su alta demanda como su accesibilidad en casi todas las compras de alimentos frescos.
 
 
 
@@ -1332,7 +1330,7 @@ ggplot(precios_fecha, aes(x = Fecha, y = PrecioMedioKg, color = Tipo)) +
 ```
 
 
-El gráfico \@ref(fig:plaban) revela que el precio de las bananas no ha tenido apenas oscilaciones a lo largo del tiempo, las que existen fueron probablemente influenciadas por la estacionalidad, la logística u otros factores externos. En algunos momentos coinciden sus tendencias, pero existe una clara decaida en el precio de estos productos durante el final de 2024. Por otro lado el precio del platano no dejo de oscilar a lo largo del tiempo viendo un claro incremento durante la mitad del año 2024 .Este análisis visual permite anticipar comportamientos de precios y comprender, a grandes vistas, cuando es el mejor momento para comprar o dejar.
+El gráfico \@ref(fig:plaban) revela que el precio de las bananas no ha tenido apenas oscilaciones a lo largo del tiempo. Las que existen fueron probablemente influenciadas por la estacionalidad, la logística u otros factores externos. En algunos momentos coinciden sus tendencias, pero existe una clara decaída en el precio de estos productos durante el final de 2024. Por otro lado el precio del plátano no dejó de oscilar a lo largo del tiempo viendo un claro incremento durante la mitad del año 2024 .Este análisis visual permite anticipar comportamientos de precios y comprender, a grandes vistas, cuándo es el mejor momento para comprar o no.
 
 
 # Conclusiones
@@ -1342,10 +1340,9 @@ El gráfico \@ref(fig:plaban) revela que el precio de las bananas no ha tenido a
   Al abordar todas las preguntas, podemos llegar a varias conclusiones clave sobre el comportamiento del consumidor en Mercadona:
 
 - Variabilidad en el gasto y en los hábitos de compra: 
-  Hemos observado que el gasto promedio y las compras varían significativamente según la estación del año, el municipio o incluso el tipo de producto. Esto refleja no solo los cambios estacionales en la oferta y demanda, sino también las diferencias regionales en los hábitos de consumo. En este sentido, los hábitos de compra no son universales, sino que se adaptan a los gustos, preferencias y necesidades de cada grupo de consumidores.
+    Hemos observado que el gasto promedio y las compras varían significativamente según la estación del año, el            municipio o incluso el tipo de producto. Esto refleja no solo los cambios estacionales en la oferta y demanda, sino     también las diferencias regionales en los hábitos de consumo. En este sentido, los hábitos de compra no son            universales, sino que se adaptan a los gustos, preferencias y necesidades de cada grupo de consumidores.
 
 - El impacto de factores externos en los precios: 
-  La variabilidad en los precios de productos como el pescado y las frutas y verduras a lo largo del tiempo subraya cómo los factores externos, como la estacionalidad o las condiciones del mercado, pueden influir en el gasto del consumidor. Los precios de algunos productos, como el pescado, son más susceptibles a estos cambios, lo que provoca una fluctuación en el precio por kilo, mientras que otros, como las frutas y verduras, mantienen un comportamiento más estable a lo largo del
-tiempo.
+    La variabilidad en los precios de productos como el pescado y las frutas y verduras a lo largo del tiempo subraya      cómo los factores externos, como la estacionalidad o las condiciones del mercado, pueden influir en el gasto del       consumidor. Los precios de algunos productos, como el pescado, son más susceptibles a estos cambios, lo que provoca     una fluctuación en el precio por kilo, mientras que otros, como las frutas y verduras, mantienen un comportamiento     más estable a lo largo del tiempo.
 
-Dicho esto agradecemos su atencion y esperamos que haya sido útil esta investigacion.
+  Dicho esto agradecemos su atención y esperamos que haya sido útil esta investigacion.
