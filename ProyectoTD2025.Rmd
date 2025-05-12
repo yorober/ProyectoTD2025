@@ -4,18 +4,18 @@ subtitle: "Tratamiento de Datos, MiniProyecto de Mercadona"
 author: "Yordano Rodríguez, Iván Jiménez, Sergio Mut, Emma Espí, Julen Navarro, Nicolás Aroca"
 date: "2025-03-30"
 output:
-  bookdown::pdf_document2:
-    number_sections: true
+  bookdown::html_document2:
     toc: true
-    toc_depth: 3
   html_document:
     echo: yes
     number_sections: true
     theme: lumen
     toc: true
     toc_depth: 3
-  bookdown::html_document2:
+  bookdown::pdf_document2:
+    number_sections: true
     toc: true
+    toc_depth: 3
 ---
 
 ```{r setup, cache=F, echo=F, message=F, warning=F, tidy=F}
@@ -1287,9 +1287,7 @@ ggplot(media_categorias, aes(x = reorder(categoria, Gasto_Medio), y = Gasto_Medi
 
 ```
 
-El gasto medio por categoría de producto (figura \@ref(fig:gmpcp) y tabla \@ref(tab:catfvp))muestra que el pescado, tienden a concentrar una parte significativa del gasto total. Por otro lado, las categorías de productos no perecederos, como los productos enlatados o los artículos de limpieza, tienen un gasto medio más moderado, aunque constante. Con estos datos nos damos cuenta de que la diferencia de precio abismal que existe entre el pescado y el resto de productos.
-
-De las tres categorias la que mayor gasto medio tiene es el pescado, con 7.90 aproximadamente, seguido de los productos varios con 2.75 y por ultimo las frutas/verduras con 1.75€ de media.
+El gasto medio por categoría de producto (figura \@ref(fig:gmpcp) y tabla \@ref(tab:catfvp)) muestra que el pescado, tienden a concentrar una parte significativa del gasto total. Por otro lado, las categorías de productos no perecederos, como los productos enlatados o los artículos de limpieza, tienen un gasto medio más moderado, aunque constante. Con estos datos nos damos cuenta de que la diferencia de precio abismal que existe entre el pescado y el resto de productos.
 
 
 
@@ -1297,34 +1295,44 @@ De las tres categorias la que mayor gasto medio tiene es el pescado, con 7.90 ap
 
 Las bananas y los plátanos son una de las frutas más comunes en nuestras cestas de la compra, pero ¿cómo ha variado su precio a lo largo del tiempo? A veces nos encontramos con que el precio de estas frutas sube o baja dependiendo de la temporada, las condiciones de oferta y demanda, o incluso de factores externos como la climatología. Vamos a analizar cómo ha cambiado el precio por kilo de estas frutas a lo largo del tiempo, y visualizaremos la evolución de sus precios mediante un gráfico de líneas.
 
-\@ref(fig:plaban)
+
 ```{r plaban,fig.cap = "Evolución del precio por kilo de bananas y plátanos", echo=FALSE}
-# Filtrar bananas y plátanos con PrecioKg conocido
+# Filtrar productos con PrecioKg conocido y clasificar como Banana o Plátano
 banana_platano <- productos %>%
   filter(!is.na(PrecioKg)) %>%
-  filter(str_detect(tolower(Producto), "banana|plátano"))
+  filter(str_detect(tolower(Producto), "banana|platano")) %>%
+  mutate(
+    Tipo = case_when(
+      str_detect(tolower(Producto), "banana") ~ "Banana",
+      str_detect(tolower(Producto), "platano") ~ "Platano",
+      TRUE ~ "Otro"
+    )
+  )
 
 # Unir con info_tickets para obtener la fecha
 banana_platano_fecha <- banana_platano %>%
   left_join(info_tickets, by = "Factura_simplificada") %>%
   filter(!is.na(Fecha))
 
-# Agrupar y calcular precio medio por fecha y producto
+# Calcular precio medio por fecha y tipo
 precios_fecha <- banana_platano_fecha %>%
-  group_by(Fecha, Producto) %>%
+  group_by(Fecha, Tipo) %>%
   summarise(PrecioMedioKg = mean(PrecioKg, na.rm = TRUE), .groups = "drop")
 
 # Graficar evolución
-ggplot(precios_fecha, aes(x = Fecha, y = PrecioMedioKg, color = Producto)) +
+ggplot(precios_fecha, aes(x = Fecha, y = PrecioMedioKg, color = Tipo)) +
   geom_line(size = 1) +
-  facet_wrap(~Producto, scales = "free_y") +
-  labs(title = "Evolución del precio por kilo de bananas y plátanos",
-       x = "Fecha", y = "Precio medio por Kg (€)") +
+  facet_wrap(~Tipo, scales = "free_y") +
+  labs(
+    x = "Fecha",
+    y = "Precio medio por Kg (€)",
+    color = "Tipo"
+  ) +
   theme_minimal()
 ```
 
 
-El gráfico \@ref(fig:plaban) revela que tanto el precio de las bananas como el de los plátanos ha tenido apenas oscilaciones a lo largo del tiempo, las que existen fueron probablemente influenciadas por la estacionalidad, la logística u otros factores externos. En algunos momentos coinciden sus tendencias, pero existe una clara decaida en el precio de estos productos durante el final de 2024 . Este análisis visual permite anticipar comportamientos de precios y comprender, a grandes vistas, cuando es el mejor momento para comprar o dejar.
+El gráfico \@ref(fig:plaban) revela que el precio de las bananas no ha tenido apenas oscilaciones a lo largo del tiempo, las que existen fueron probablemente influenciadas por la estacionalidad, la logística u otros factores externos. En algunos momentos coinciden sus tendencias, pero existe una clara decaida en el precio de estos productos durante el final de 2024. Por otro lado el precio del platano no dejo de oscilar a lo largo del tiempo viendo un claro incremento durante la mitad del año 2024 .Este análisis visual permite anticipar comportamientos de precios y comprender, a grandes vistas, cuando es el mejor momento para comprar o dejar.
 
 
 # Conclusiones
