@@ -4,18 +4,18 @@ subtitle: "Tratamiento de Datos, MiniProyecto de Mercadona"
 author: "Yordano Rodríguez, Iván Jiménez, Sergio Mut, Emma Espí, Julen Navarro, Nicolás Aroca"
 date: "2025-03-30"
 output:
-  bookdown::html_document2:
+  bookdown::pdf_document2:
+    number_sections: true
     toc: true
+    toc_depth: 3
   html_document:
     echo: yes
     number_sections: true
     theme: lumen
     toc: true
     toc_depth: 3
-  bookdown::pdf_document2:
-    number_sections: true
+  bookdown::html_document2:
     toc: true
-    toc_depth: 3
 ---
 
 ```{r setup, cache=F, echo=F, message=F, warning=F, tidy=F}
