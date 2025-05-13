@@ -6,16 +6,14 @@ date: "2025-03-30"
 output:
   bookdown::html_document2:
     toc: true
-  html_document:
-    echo: yes
     number_sections: true
     theme: lumen
-    toc: true
     toc_depth: 3
   bookdown::pdf_document2:
     number_sections: true
     toc: true
     toc_depth: 3
+always_allow_html: yes
 ---
 
 ```{r setup, cache=F, echo=F, message=F, warning=F, tidy=F}
@@ -91,7 +89,7 @@ library(kableExtra)
  
  - La validación correcta de tipos (nos aseguramos de que cada uno de nuestros campos tuviese el tipo de dato correcto).
  
- - Correcciones manuales necesarias como el filtrado de tickets válidos y la identificación de tickets repetidos terminados con "O╠ée╠ü┬╝".
+ - Correcciones manuales necesarias como el filtrado de tickets válidos y la identificación de tickets repetidos.
 
   Este proceso de transformación permite un análisis confiable en fases posteriores del proyecto. Los scripts completos de transformación están disponibles en el repositorio GitHub del proyecto.
 
@@ -132,11 +130,13 @@ df_variables <- data.frame(
                   "Precio de los productos por peso", "Precio del producto")
 )
 
+format_type <- if (knitr::is_latex_output()) "latex" else "html"
+
 # Generación de la tabla con referencia
 tabla <- df_variables %>%
   kbl(
     caption = "Diccionario de variables",
-    format = "html",
+    format = format_type,
     col.names = c("Variable", "Tipo", "Descripción")
   ) %>%
   kable_styling(
@@ -650,19 +650,17 @@ ggplot(info_tickets, aes(x = Factura_simplificada, y = Importe_Final)) +
 Como se puede observar, el ticket con mayor gasto es aquel al que le corresponde la factura simplificada: 4530-021-052628, cuyos datos se pueden ver en la tabla \@ref(tab:tmi) y los productos que le corresponden se muestran en la tabla \@ref(tab:pm) .
 
 ```{r tmi, echo=FALSE}
-
 ticket_max %>%
   kbl(
     caption = "Ticket con mayor importe",
-    format = "html",
+    format = format_type,
     align = "c"
   ) %>%
   kable_styling(
     bootstrap_options = c("striped", "hover"),
     full_width = FALSE,
     position = "center"
-  ) %>%
-  scroll_box(width = "100%")
+  )
 
 ```
 
@@ -673,15 +671,14 @@ productos_max <- productos %>%
 productos_max %>%
   kbl(
     caption = "Productos del ticket máximo",
-    format = "html",
+    format = format_type,
     align = "c"
   ) %>%
   kable_styling(
     bootstrap_options = c("striped", "hover"),
     full_width = FALSE,
     position = "center"
-  ) %>%
-  scroll_box( height = "200px")
+  )
 ```
 
 
@@ -698,7 +695,7 @@ importe_municipio <- info_tickets %>%
 importe_municipio %>%
   kbl(
     caption = "Importe medio de tickets por municipio",
-    format = "html",
+    format = format_type,
     align = "c",
     digits = 2
   ) %>%
@@ -749,7 +746,7 @@ tickets_por_municipio <- info_tickets %>%
 tickets_por_municipio %>%
   kbl(
     caption = "Total de tickets por municipio",
-    format = "html",
+    format = format_type,
     align = "c"
   ) %>%
   kable_styling(
@@ -796,7 +793,7 @@ totales_globales <- productos %>%
 totales_globales %>%
   kbl(
     caption = "Totales globales por tipo de producto",
-    format = "html",
+    format = format_type,
     align = "c"
   ) %>%
   kable_styling(
@@ -864,7 +861,7 @@ pescado2 <- head(pescado, 5)
 pescado2 %>%
   kbl(
     caption = "Top 5 productos sin cantidad (solo precio por kg)",
-    format = "html",
+    format = format_type,
     align = "c"
   ) %>%
   kable_styling(
@@ -1208,7 +1205,7 @@ m_5_frutas_verduras <- frutas_verduras %>%
 tibble(m_5_frutas_verduras) %>%
   kbl(
     caption = "Top 5 productos más pesados de frutas y verduras",
-    format = "html",
+    format = format_type,
     align = "c",
     digits = 2
   ) %>%
@@ -1250,7 +1247,7 @@ media_categorias <- categorias %>%
 media_categorias %>%
   kbl(
     caption = "Gasto medio por categoría",
-    format = "html",
+    format = format_type,
     align = "c"
   ) %>%
   kable_styling(
