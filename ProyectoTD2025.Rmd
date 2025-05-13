@@ -4,14 +4,14 @@ subtitle: "Tratamiento de Datos, MiniProyecto de Mercadona"
 author: "Yordano Rodríguez, Iván Jiménez, Sergio Mut, Emma Espí, Julen Navarro, Nicolás Aroca"
 date: "2025-03-30"
 output:
+  bookdown::pdf_document2:
+    number_sections: true
+    toc: true
+    toc_depth: 3
   bookdown::html_document2:
     toc: true
     number_sections: true
     theme: lumen
-    toc_depth: 3
-  bookdown::pdf_document2:
-    number_sections: true
-    toc: true
     toc_depth: 3
 always_allow_html: yes
 ---
@@ -647,26 +647,12 @@ ggplot(info_tickets, aes(x = Factura_simplificada, y = Importe_Final)) +
 
 ```
 
-Como se puede observar, el ticket con mayor gasto es aquel al que le corresponde la factura simplificada: 4530-021-052628, cuyos datos se pueden ver en la tabla \@ref(tab:tmi) y los productos que le corresponden se muestran en la tabla \@ref(tab:pm) .
-
-```{r tmi, echo=FALSE}
-ticket_max %>%
-  kbl(
-    caption = "Ticket con mayor importe",
-    format = format_type,
-    align = "c"
-  ) %>%
-  kable_styling(
-    bootstrap_options = c("striped", "hover"),
-    full_width = FALSE,
-    position = "center"
-  )
-
-```
+Como se puede observar, el ticket con mayor gasto es aquel al que le corresponde la factura simplificada: 4530-021-052628, cuyos productos se corresponden con los que se muestran en la tabla \@ref(tab:pm) .
 
 ```{r pm, echo=FALSE}
 productos_max <- productos %>%
-  filter(Factura_simplificada == ticket_max$Factura_simplificada)
+  filter(Factura_simplificada == ticket_max$Factura_simplificada) %>%
+  select(Factura_simplificada, Producto, Cantidad, Importe)
 
 productos_max %>%
   kbl(
